@@ -76,7 +76,7 @@ export default function SignaturePad({ onChange, apiRef }) {
         <button type="button" onClick={clear}>
           Clear
         </button>
-        <span style={{ fontSize: 12, color: "#666" }}>
+        <span style={{ fontSize: 12, color: "#94a3b8" }}>
           {hasInk ? "Signature captured" : "Draw your signature above"}
         </span>
       </div>

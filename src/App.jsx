@@ -76,7 +76,7 @@ export default function App() {
       }}
     >
       <h1 style={{ marginBottom: 6 }}>Contract PDF Generator</h1>
-      <p style={{ marginTop: 0, color: "#666" }}>
+      <p style={{ marginTop: 0, color: "#94a3b8" }}>
         Fill details, sign, export a PDF. (All client-side)
       </p>
 
@@ -146,7 +146,7 @@ export default function App() {
           <SignaturePad apiRef={signatureApiRef} onChange={setSignatureDataUrl} />
           {signatureDataUrl ? (
             <div style={{ marginTop: 10 }}>
-              <div style={{ fontSize: 12, color: "#666", marginBottom: 6 }}>
+              <div style={{ fontSize: 12, color: "#94a3b8", marginBottom: 6 }}>
                 Preview (what will be embedded)
               </div>
               <img
@@ -156,7 +156,7 @@ export default function App() {
                   maxWidth: 320,
                   height: 90,
                   objectFit: "contain",
-                  border: "1px solid #ddd",
+                  border: "1px solid #2b2b2b",
                   borderRadius: 8,
                   background: "#fff",
                   padding: 6,
@@ -173,7 +173,9 @@ export default function App() {
           style={{
             padding: "12px 14px",
             borderRadius: 10,
-            border: "1px solid #ddd",
+            border: "1px solid #2b2b2b",
+            background: "#0b0b0b",
+            color: "#e5e7eb",
             cursor: busy ? "not-allowed" : "pointer",
             fontWeight: 700,
           }}
@@ -203,7 +205,7 @@ function Field({ label, type = "text", value, onChange, placeholder }) {
 const labelStyle = {
   display: "block",
   fontSize: 12,
-  color: "#666",
+  color: "#94a3b8",
   marginBottom: 6,
 };
 
@@ -211,7 +213,9 @@ const inputStyle = {
   width: "100%",
   padding: "10px 10px",
   borderRadius: 10,
-  border: "1px solid #ddd",
+  border: "1px solid #2b2b2b",
+  background: "#0b0b0b",
+  color: "#e5e7eb",
   outline: "none",
   fontSize: 14,
   boxSizing: "border-box",
