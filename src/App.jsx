@@ -1,6 +1,7 @@
 import React, { useMemo, useRef, useState } from "react";
 import SignaturePad from "./ui/SignaturePad";
 import gwLogoUrl from "./assets/gw-logo.png";
+import gwLogoBlackUrl from "./assets/GW Logo Black version.jpg";
 
 export default function App() {
   const [form, setForm] = useState({
@@ -14,11 +15,20 @@ export default function App() {
     dateEnd: "",
     costOmr: "",
     bankAccount: "",
+    employerName: "",
   });
 
   const [signatureDataUrl, setSignatureDataUrl] = useState(null);
   const [busy, setBusy] = useState(false);
   const signatureApiRef = useRef(null);
+
+  const signedDateDisplay = useMemo(() => {
+    if (form.contractDate) {
+      const [y, m, d] = String(form.contractDate).split("-");
+      if (y && m && d) return `${d}/${m}/${y}`;
+    }
+    return new Date().toLocaleDateString("en-GB");
+  }, [form.contractDate]);
 
   const fileName = useMemo(() => {
     const safe = (s) =>
@@ -78,6 +88,20 @@ export default function App() {
         fontFamily: "system-ui, Arial",
       }}
     >
+      <header
+        style={{
+          marginBottom: 10,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <img
+          src={gwLogoBlackUrl}
+          alt="GW"
+          style={{ height: 100, width: "auto", objectFit: "contain" }}
+        />
+      </header>
       <h1 style={{ marginBottom: 6 }}>Contract PDF Generator</h1>
       <p style={{ marginTop: 0, color: "#94a3b8" }}>
         Fill details, sign, export a PDF. (All client-side)
@@ -145,7 +169,49 @@ export default function App() {
         </div>
 
         <div>
-          <h3 style={{ marginBottom: 8 }}>Signature</h3>
+          <h3 style={{ marginBottom: 8 }}>Freelancer / Candidate</h3>
+          <div style={{ marginBottom: 18 }}>
+            <Field
+              label="By:"
+              value={form.fullName}
+              onChange={update("fullName")}
+              placeholder="Freelancer name"
+            />
+          </div>
+
+          <h3 style={{ marginBottom: 8 }}>Employer Signature</h3>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "1fr auto",
+              gap: 12,
+              alignItems: "end",
+              marginBottom: 12,
+            }}
+          >
+            <Field
+              label="Signed by"
+              value={form.employerName}
+              onChange={update("employerName")}
+              placeholder="Employer name"
+            />
+            <div style={{ minWidth: 160 }}>
+              <label style={labelStyle}>Date</label>
+              <div
+                style={{
+                  ...inputStyle,
+                  display: "flex",
+                  alignItems: "center",
+                  height: 42,
+                  padding: "0 10px",
+                  color: "#e5e7eb",
+                }}
+              >
+                {signedDateDisplay}
+              </div>
+            </div>
+          </div>
+
           <SignaturePad apiRef={signatureApiRef} onChange={setSignatureDataUrl} />
           {signatureDataUrl ? (
             <div style={{ marginTop: 10 }}>
@@ -216,9 +282,10 @@ const inputStyle = {
   width: "100%",
   padding: "10px 10px",
   borderRadius: 10,
-  border: "1px solid #2b2b2b",
-  background: "#0b0b0b",
-  color: "#e5e7eb",
+  border: "1px solid #334155",
+  background: "#020617",
+  color: "#f8fafc",
+  boxShadow: "0 0 0 1px rgba(148, 163, 184, 0.12) inset",
   outline: "none",
   fontSize: 14,
   boxSizing: "border-box",

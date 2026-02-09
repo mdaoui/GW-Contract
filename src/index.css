@@ -25,3 +25,9 @@ button {
   background: #0b0b0b;
   color: #e5e7eb;
 }
+
+input::placeholder,
+textarea::placeholder {
+  color: #94a3b8;
+  opacity: 1;
+}

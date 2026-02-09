@@ -257,7 +257,17 @@ async function drawCoverPage(
 async function drawSignatureBlock(
   pdfDoc,
   page,
-  { width, margin, y, font, fontBold, signaturePngDataUrl, signedBy, signedDate }
+  {
+    width,
+    margin,
+    y,
+    font,
+    fontBold,
+    signaturePngDataUrl,
+    employerName,
+    signedDate,
+    freelancerName,
+  }
 ) {
   y -= 16;
   page.drawText("Signature:", { x: margin, y, size: 12, font: fontBold });
@@ -307,8 +317,8 @@ async function drawSignatureBlock(
   y -= boxH + 18;
 
   page.drawText("Signed by:", { x: margin, y, size: 10, font: fontBold });
-  const signedByText = String(signedBy || "").trim().slice(0, 60);
-  page.drawText(signedByText || "__________________________", {
+  const employerNameText = String(employerName || "").trim().slice(0, 60);
+  page.drawText(employerNameText || "__________________________", {
     x: margin + 70,
     y,
     size: 10,
@@ -324,7 +334,38 @@ async function drawSignatureBlock(
     font,
   });
 
-  return y - 14;
+  y -= 34;
+
+  page.drawText("FREELANCER / CANDIDATE:", { x: margin, y, size: 12, font: fontBold });
+  y -= 18;
+
+  drawLabeledLine(page, {
+    label: "By: ",
+    value: String(freelancerName || "").trim() || "__________________________",
+    x: margin,
+    y,
+    labelFont: fontBold,
+    valueFont: fontBold,
+    labelSize: 12,
+    valueSize: 12,
+    gap: 2,
+  });
+
+  y -= 22;
+
+  // Blank signature space for freelancer (intentionally empty)
+  page.drawText("Signature:", { x: margin, y, size: 12, font: fontBold });
+  y -= 10;
+  page.drawRectangle({
+    x: margin,
+    y: y - boxH,
+    width: boxW,
+    height: boxH,
+    borderColor: rgb(0.75, 0.75, 0.75),
+    borderWidth: 1,
+  });
+
+  return y - boxH - 14;
 }
 
 /** ---------- Main Generator ---------- **/
@@ -342,10 +383,12 @@ export async function generateContractPdf({
   costOmr,
   bankAccount,
   signaturePngDataUrl,
+  employerName,
   logoPath = `${import.meta.env.BASE_URL}assets/gw-logo.png`,
 }) {
   const pdfDoc = await PDFDocument.create();
   const today = formatDateFromJsDate(new Date());
+  const signedDate = contractDate ? formatDate(contractDate) : today;
 
   await drawCoverPage(pdfDoc, {
     createdBy,
@@ -507,7 +550,7 @@ export async function generateContractPdf({
   ]);
 
   // Signature at the end (auto page break)
-  ensureSpace(200);
+  ensureSpace(320);
   y = await drawSignatureBlock(pdfDoc, page, {
     width,
     margin,
@@ -515,8 +558,9 @@ export async function generateContractPdf({
     font,
     fontBold,
     signaturePngDataUrl,
-    signedBy: fullName,
-    signedDate: today,
+    employerName,
+    signedDate,
+    freelancerName: fullName,
   });
 
   const bytes = await pdfDoc.save();
