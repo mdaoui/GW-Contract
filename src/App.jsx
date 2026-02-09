@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useRef, useState } from "react";
 import SignaturePad from "./ui/SignaturePad";
 
 export default function App() {
@@ -15,6 +15,7 @@ export default function App() {
 
   const [signatureDataUrl, setSignatureDataUrl] = useState(null);
   const [busy, setBusy] = useState(false);
+  const signatureApiRef = useRef(null);
 
   const fileName = useMemo(() => {
     const safe = (s) =>
@@ -46,10 +47,14 @@ export default function App() {
   const onGenerate = async () => {
     setBusy(true);
     try {
+      const sig =
+        signatureApiRef.current?.getDataUrl?.() ?? signatureDataUrl ?? null;
+      if (sig !== signatureDataUrl) setSignatureDataUrl(sig);
+
       const { generateContractPdf } = await import("./pdf/generateContractPdf");
       const blob = await generateContractPdf({
         ...form,
-        signaturePngDataUrl: signatureDataUrl,
+        signaturePngDataUrl: sig,
       });
       downloadBlob(blob, fileName);
     } finally {
@@ -122,7 +127,27 @@ export default function App() {
 
         <div>
           <h3 style={{ marginBottom: 8 }}>Signature</h3>
-          <SignaturePad onChange={setSignatureDataUrl} />
+          <SignaturePad apiRef={signatureApiRef} onChange={setSignatureDataUrl} />
+          {signatureDataUrl ? (
+            <div style={{ marginTop: 10 }}>
+              <div style={{ fontSize: 12, color: "#666", marginBottom: 6 }}>
+                Preview (what will be embedded)
+              </div>
+              <img
+                alt="Signature preview"
+                src={signatureDataUrl}
+                style={{
+                  maxWidth: 320,
+                  height: 90,
+                  objectFit: "contain",
+                  border: "1px solid #ddd",
+                  borderRadius: 8,
+                  background: "#fff",
+                  padding: 6,
+                }}
+              />
+            </div>
+          ) : null}
         </div>
 
         <button

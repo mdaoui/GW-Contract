@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import SignaturePadLib from "signature_pad";
 
-export default function SignaturePad({ onChange }) {
+export default function SignaturePad({ onChange, apiRef }) {
   const canvasRef = useRef(null);
   const padRef = useRef(null);
   const [hasInk, setHasInk] = useState(false);
@@ -33,11 +33,20 @@ export default function SignaturePad({ onChange }) {
       onChange?.(empty ? null : pad.toDataURL("image/png"));
     };
 
+    if (apiRef) {
+      apiRef.current = {
+        getDataUrl: () => (pad.isEmpty() ? null : pad.toDataURL("image/png")),
+        clear: () => pad.clear(),
+        isEmpty: () => pad.isEmpty(),
+      };
+    }
+
     return () => {
       window.removeEventListener("resize", resize);
       if (typeof pad.off === "function") pad.off();
+      if (apiRef) apiRef.current = null;
     };
-  }, [onChange]);
+  }, [onChange, apiRef]);
 
   const clear = () => {
     const pad = padRef.current;
