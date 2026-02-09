@@ -120,7 +120,7 @@ async function drawCoverPage(
     projectName,
     contractDate,
     dateStart,
-    logoPath = "src/assets/gw-logo.png",
+    logoPath = `${import.meta.env.BASE_URL}assets/gw-logo.png`,
   }
 ) {
   const page = pdfDoc.addPage([595.28, 841.89]); // A4 portrait
@@ -308,7 +308,7 @@ export async function generateContractPdf({
   costOmr,
   bankAccount,
   signaturePngDataUrl,
-  logoPath = "/assets/gw-logo.png",
+  logoPath = `${import.meta.env.BASE_URL}assets/gw-logo.png`,
 }) {
   const pdfDoc = await PDFDocument.create();
 
