@@ -57,6 +57,27 @@ export default function SignaturePad({ onChange, apiRef }) {
 
   return (
     <div style={{ display: "grid", gap: 8 }}>
+      <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+        <button
+          type="button"
+          onClick={clear}
+          style={{
+            padding: "10px 12px",
+            borderRadius: 10,
+            border: "1px solid #2b2b2b",
+            background: "#333333ff",
+            color: "#e5e7eb",
+            cursor: "pointer",
+            fontWeight: 700,
+          }}
+        >
+          Clear
+        </button>
+        <span style={{ fontSize: 12, color: "#94a3b8" }}>
+          {hasInk ? "Signature captured" : "Draw your signature below"}
+        </span>
+      </div>
+
       <div
         style={{
           border: "1px solid #ccc",
@@ -70,15 +91,6 @@ export default function SignaturePad({ onChange, apiRef }) {
           ref={canvasRef}
           style={{ width: "100%", height: "100%", display: "block" }}
         />
-      </div>
-
-      <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-        <button type="button" onClick={clear}>
-          Clear
-        </button>
-        <span style={{ fontSize: 12, color: "#94a3b8" }}>
-          {hasInk ? "Signature captured" : "Draw your signature above"}
-        </span>
       </div>
     </div>
   );

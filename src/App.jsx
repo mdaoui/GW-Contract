@@ -104,7 +104,7 @@ export default function App() {
       </header>
       <h1 style={{ marginBottom: 6 }}>Contract PDF Generator</h1>
       <p style={{ marginTop: 0, color: "#94a3b8" }}>
-        Fill details, sign, export a PDF. (All client-side)
+        Contract creator made by (MD for GW Production Team)
       </p>
 
       <div style={{ display: "grid", gap: 12 }}>
@@ -114,7 +114,7 @@ export default function App() {
             value={form.fullName}
             onChange={update("fullName")}
           />
-          <Field label="ID Card" value={form.idCard} onChange={update("idCard")} />
+          <Field label="National ID Card" value={form.idCard} onChange={update("idCard")} />
           <Field
             label="Project No."
             value={form.projectNo}
@@ -147,10 +147,10 @@ export default function App() {
             label="Cost (OMR)"
             value={form.costOmr}
             onChange={update("costOmr")}
-            placeholder="e.g. 80"
+            placeholder="e.g. 150"
           />
           <Field
-            label="Bank Account Number"
+            label="Bank Account Number (Bank Muscat)"
             value={form.bankAccount}
             onChange={update("bankAccount")}
             placeholder="e.g. 0311056779010014"
@@ -186,7 +186,7 @@ export default function App() {
               gridTemplateColumns: "1fr auto",
               gap: 12,
               alignItems: "end",
-              marginBottom: 12,
+              marginBottom: 80,
             }}
           >
             <Field
@@ -243,7 +243,7 @@ export default function App() {
             padding: "12px 14px",
             borderRadius: 10,
             border: "1px solid #2b2b2b",
-            background: "#111827",
+            background: "#333333ff",
             color: "#e5e7eb",
             cursor: busy ? "not-allowed" : "pointer",
             fontWeight: 700,
