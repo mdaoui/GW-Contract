@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import SignaturePad from "./ui/SignaturePad";
 import gwLogoUrl from "./assets/gw-logo.png";
 
@@ -19,6 +19,8 @@ export default function App() {
   const [signatureDataUrl, setSignatureDataUrl] = useState(null);
   const [busy, setBusy] = useState(false);
   const signatureApiRef = useRef(null);
+  const previewUrlRef = useRef(null);
+  const [pdfPreviewUrl, setPdfPreviewUrl] = useState(null);
 
   const fileName = useMemo(() => {
     const safe = (s) =>
@@ -47,19 +49,46 @@ export default function App() {
     URL.revokeObjectURL(url);
   };
 
-  const onGenerate = async () => {
+  const setPreviewFromBlob = (blob) => {
+    const url = URL.createObjectURL(blob);
+    if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current);
+    previewUrlRef.current = url;
+    setPdfPreviewUrl(url);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current);
+    };
+  }, []);
+
+  const buildPdfBlob = async () => {
+    const sig = signatureApiRef.current?.getDataUrl?.() ?? signatureDataUrl ?? null;
+    if (sig !== signatureDataUrl) setSignatureDataUrl(sig);
+
+    const { generateContractPdf } = await import("./pdf/generateContractPdf");
+    return generateContractPdf({
+      ...form,
+      signaturePngDataUrl: sig,
+      logoPath: gwLogoUrl,
+    });
+  };
+
+  const onPreview = async () => {
     setBusy(true);
     try {
-      const sig =
-        signatureApiRef.current?.getDataUrl?.() ?? signatureDataUrl ?? null;
-      if (sig !== signatureDataUrl) setSignatureDataUrl(sig);
+      const blob = await buildPdfBlob();
+      setPreviewFromBlob(blob);
+    } finally {
+      setBusy(false);
+    }
+  };
 
-      const { generateContractPdf } = await import("./pdf/generateContractPdf");
-      const blob = await generateContractPdf({
-        ...form,
-        signaturePngDataUrl: sig,
-        logoPath: gwLogoUrl,
-      });
+  const onDownload = async () => {
+    setBusy(true);
+    try {
+      const blob = await buildPdfBlob();
+      setPreviewFromBlob(blob);
       downloadBlob(blob, fileName);
     } finally {
       setBusy(false);
@@ -69,7 +98,7 @@ export default function App() {
   return (
     <div
       style={{
-        maxWidth: 820,
+        maxWidth: 1180,
         margin: "40px auto",
         padding: 16,
         fontFamily: "system-ui, Arial",
@@ -80,8 +109,16 @@ export default function App() {
         Fill details, sign, export a PDF. (All client-side)
       </p>
 
-      <div style={{ display: "grid", gap: 12 }}>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "minmax(0,1fr) minmax(0,1fr)",
+          gap: 16,
+          alignItems: "start",
+        }}
+      >
+        <div style={{ display: "grid", gap: 12 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
           <Field
             label="Full Name"
             value={form.fullName}
@@ -123,65 +160,122 @@ export default function App() {
             placeholder="e.g. 80"
           />
           <Field
-            label="Bank Account"
+            label="Bank Account Number"
             value={form.bankAccount}
             onChange={update("bankAccount")}
             placeholder="e.g. 0311056779010014"
           />
-        </div>
+          </div>
 
-        <div>
-          <label style={labelStyle}>Project Brief</label>
-          <textarea
-            value={form.projectBrief}
-            onChange={update("projectBrief")}
-            rows={6}
-            style={inputStyle}
-            placeholder="Write a short brief..."
-          />
-        </div>
+          <div>
+            <label style={labelStyle}>Project Brief</label>
+            <textarea
+              value={form.projectBrief}
+              onChange={update("projectBrief")}
+              rows={6}
+              style={inputStyle}
+              placeholder="Write a short brief..."
+            />
+          </div>
 
-        <div>
-          <h3 style={{ marginBottom: 8 }}>Signature</h3>
-          <SignaturePad apiRef={signatureApiRef} onChange={setSignatureDataUrl} />
-          {signatureDataUrl ? (
-            <div style={{ marginTop: 10 }}>
-              <div style={{ fontSize: 12, color: "#94a3b8", marginBottom: 6 }}>
-                Preview (what will be embedded)
+          <div>
+            <h3 style={{ marginBottom: 8 }}>Signature</h3>
+            <SignaturePad apiRef={signatureApiRef} onChange={setSignatureDataUrl} />
+            {signatureDataUrl ? (
+              <div style={{ marginTop: 10 }}>
+                <div style={{ fontSize: 12, color: "#94a3b8", marginBottom: 6 }}>
+                  Preview (what will be embedded)
+                </div>
+                <img
+                  alt="Signature preview"
+                  src={signatureDataUrl}
+                  style={{
+                    maxWidth: 320,
+                    height: 90,
+                    objectFit: "contain",
+                    border: "1px solid #2b2b2b",
+                    borderRadius: 8,
+                    background: "#fff",
+                    padding: 6,
+                  }}
+                />
               </div>
-              <img
-                alt="Signature preview"
-                src={signatureDataUrl}
-                style={{
-                  maxWidth: 320,
-                  height: 90,
-                  objectFit: "contain",
-                  border: "1px solid #2b2b2b",
-                  borderRadius: 8,
-                  background: "#fff",
-                  padding: 6,
-                }}
-              />
-            </div>
-          ) : null}
+            ) : null}
+          </div>
+
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+            <button
+              type="button"
+              onClick={onPreview}
+              disabled={busy}
+              style={{
+                padding: "12px 14px",
+                borderRadius: 10,
+                border: "1px solid #2b2b2b",
+                background: "#0b0b0b",
+                color: "#e5e7eb",
+                cursor: busy ? "not-allowed" : "pointer",
+                fontWeight: 700,
+              }}
+            >
+              {busy ? "Generating..." : "Update Preview"}
+            </button>
+
+            <button
+              type="button"
+              onClick={onDownload}
+              disabled={busy}
+              style={{
+                padding: "12px 14px",
+                borderRadius: 10,
+                border: "1px solid #2b2b2b",
+                background: "#111827",
+                color: "#e5e7eb",
+                cursor: busy ? "not-allowed" : "pointer",
+                fontWeight: 700,
+              }}
+            >
+              {busy ? "Generating..." : "Download PDF"}
+            </button>
+          </div>
         </div>
 
-        <button
-          type="button"
-          onClick={onGenerate}
-          disabled={busy}
+        <div
           style={{
-            padding: "12px 14px",
-            borderRadius: 10,
             border: "1px solid #2b2b2b",
-            background: "#0b0b0b",
-            color: "#e5e7eb",
-            cursor: busy ? "not-allowed" : "pointer",
-            fontWeight: 700,
+            borderRadius: 12,
+            overflow: "hidden",
+            background: "#050505",
           }}
         >
-          {busy ? "Generating..." : "Generate PDF"}
-        </button>
+          <div
+            style={{
+              padding: 12,
+              borderBottom: "1px solid #2b2b2b",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 12,
+            }}
+          >
+            <div style={{ fontWeight: 700 }}>PDF Preview</div>
+            <div style={{ fontSize: 12, color: "#94a3b8" }}>
+              Click “Update Preview”
+            </div>
+          </div>
+
+          <div style={{ height: 760, background: "#111" }}>
+            {pdfPreviewUrl ? (
+              <iframe
+                title="PDF Preview"
+                src={pdfPreviewUrl}
+                style={{ width: "100%", height: "100%", border: 0, background: "#111" }}
+              />
+            ) : (
+              <div style={{ padding: 16, color: "#94a3b8" }}>No preview yet.</div>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );
