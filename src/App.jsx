@@ -98,7 +98,7 @@ export default function App() {
   return (
     <div
       style={{
-        maxWidth: 1180,
+        maxWidth: 1400,
         margin: "40px auto",
         padding: 16,
         fontFamily: "system-ui, Arial",
@@ -112,7 +112,7 @@ export default function App() {
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "minmax(0,1fr) minmax(0,1fr)",
+          gridTemplateColumns: "minmax(360px, 560px) minmax(0, 1fr)",
           gap: 16,
           alignItems: "start",
         }}
@@ -246,6 +246,11 @@ export default function App() {
             borderRadius: 12,
             overflow: "hidden",
             background: "#050505",
+            position: "sticky",
+            top: 16,
+            height: "calc(100vh - 120px)",
+            display: "flex",
+            flexDirection: "column",
           }}
         >
           <div
@@ -264,12 +269,17 @@ export default function App() {
             </div>
           </div>
 
-          <div style={{ height: 760, background: "#111" }}>
+          <div style={{ flex: 1, background: "#111" }}>
             {pdfPreviewUrl ? (
               <iframe
                 title="PDF Preview"
                 src={pdfPreviewUrl}
-                style={{ width: "100%", height: "100%", border: 0, background: "#111" }}
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  border: 0,
+                  background: "#111",
+                }}
               />
             ) : (
               <div style={{ padding: 16, color: "#94a3b8" }}>No preview yet.</div>

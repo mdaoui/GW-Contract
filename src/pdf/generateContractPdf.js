@@ -209,7 +209,8 @@ async function drawCoverPage(
 
   const coverDate = formatCoverDate(contractDate || dateStart);
   if (coverDate) {
-    page.drawText(coverDate, { x: x0, y: 190, size: 12, font: helvBold });
+    // Place date below "Project Name" with comfortable spacing.
+    page.drawText(coverDate, { x: x0, y: y + 10, size: 12, font: helvBold });
   }
 
   try {
