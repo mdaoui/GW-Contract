@@ -93,7 +93,7 @@ async function drawCoverPage(
     projectName,
     contractDate,
     dateStart,
-    logoPath = "/assets/gw-logo.png",
+    logoPath = "src/assets/gw-logo.png",
   }
 ) {
   const page = pdfDoc.addPage([595.28, 841.89]); // A4 portrait
