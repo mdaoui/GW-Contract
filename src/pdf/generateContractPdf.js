@@ -169,6 +169,7 @@ async function drawCoverPage(
     labelSize: 13,
     valueSize: 12,
   });
+  y -= 36;
 
   const coverDate = formatCoverDate(contractDate || dateStart);
   if (coverDate) {
@@ -271,6 +272,8 @@ export async function generateContractPdf({
   projectBrief,
   dateStart,
   dateEnd,
+  costOmr,
+  bankAccount,
   signaturePngDataUrl,
   logoPath = "/assets/gw-logo.png",
 }) {
@@ -343,25 +346,49 @@ export async function generateContractPdf({
     y -= 6;
   };
 
+  // Body header/meta
   drawHeading("CONTRACT DETAILS");
   drawParagraph(`Prepared for: ${fullName || ""} (ID: ${idCard || ""})`);
   drawParagraph(`Project No: ${projectNo || ""}`);
   drawParagraph(`Project Name: ${projectName || ""}`);
   drawParagraph(`Start: ${formatDate(dateStart)}    End: ${formatDate(dateEnd)}`);
 
+  // 1. PROJECT BRIEF
   drawHeading("1. PROJECT BRIEF");
   drawParagraph(projectBrief || "__________________________");
 
+  // 1.1 Description of Services.
+  drawHeading("1.1 Description of Services.");
+  drawParagraph(
+    `Beginning on ${formatDate(dateStart)} ${fullName || ""} will provide the services as described.`
+  );
+
+  // 1.2 Completion.
+  drawHeading("1.2 Completion.");
+  drawParagraph(
+    `All Services shall be completed by ${fullName || ""} on or before on ${formatDate(dateEnd)}`
+  );
+
+  // Client Details (as plain lines like your template)
+  drawParagraph("Client Details:", 11);
+  drawParagraph("Galaxy Way production responsibility", 11);
+  drawParagraph(
+    "We are handling the communication with the client and any other creative work.",
+    11
+  );
+
+  // COMMUNICATION
   drawHeading("COMMUNICATION");
   drawBullets([
     "All the communication should be clear and documented.",
     "GW will communicate with the freelancer through company email.",
-    "WhatsApp communication can be used for fast inquiries.",
-    "If required freelancer should be available for online interaction with prior notice by online platforms like Zoom, Teams.",
+    "WhatsApp communication It can be used for fast inquiries.",
+    "If required freelancer should be available for online interaction with prior notice by online platforms link Zoom, Teams.",
     "GW or freelancer should reply/respond within 2-4 hours of receiving email/call.",
     "Freelancer will connect with the Head of production.",
   ]);
 
+  // CONFIDENTIALITY
   drawHeading("CONFIDENTIALITY");
   drawBullets([
     "All the project materials are strictly confidential and should not be shared with any third party.",
@@ -369,12 +396,49 @@ export async function generateContractPdf({
     "This provision shall continue to be effective after the termination of this Contract.",
   ]);
 
+  // OWNERSHIP OF RIGHTS
   drawHeading("OWNERSHIP OF RIGHTS");
   drawBullets([
     "The Client continues to own any and all proprietary information it shares with the designer during the term of this Contract. The freelancer has no rights to this proprietary information and may not use it except to complete the designing services. Upon completion of the Contract, the Client will own the final content Deliverables.",
-    "Freelancer not allowed to publish any projects on social media platforms or any online platform.",
+    "Freelancer Not allowed to publish any projects on social media platforms or any online platform.",
   ]);
 
+  // PAYMENT (dynamic)
+  drawHeading("PAYMENT");
+  drawBullets([`Contract costing will be ${costOmr ?? ""} OMR`, `Bank Muscat: ${bankAccount ?? ""}`]);
+
+  // PAYMENT POLICY
+  drawHeading("PAYMENT POLICY");
+  drawBullets([
+    "Payment will not be sent to any third party other than the freelancer.",
+    "Mode of payment will be through the Bank Muscat No cash payment will be made.",
+    "Advance payment will be made only on special cases.",
+    "Payment will be made within a period not less than 35 working days from the date of signing this contract.",
+  ]);
+
+  // PROJECT TIMELINE
+  drawHeading("PROJECT TIMELINE");
+  drawBullets(["The project will be going on until the project finishes."]);
+
+  // AGREEMENT
+  drawHeading("AGREEMENT");
+  drawBullets([
+    "Mutual agreement will be made between Galaxy Way and the freelancer.",
+    "Agreement will be considered as the legal document for both company and the freelancer.",
+    "Agreement cannot be altered once agreed between both parties.",
+  ]);
+
+  // TERMINATION CLAUSE
+  drawHeading("TERMINATION CLAUSE");
+  drawBullets([
+    "If GW or freelancer want to discontinue or cancel the contract, they should inform you with a 1 month notice period.",
+    "This Contract may be cancelled/terminated by either Party submitting a written notice to the other Party or may immediately be cancelled under the following circumstances:",
+    "If there is a continuous delay to make a required payment when due.",
+    "The failure to make available or deliver the services in the time and manner as described in this Contract.",
+    "Misuse of the company’s portfolio/projects in any cases.",
+  ]);
+
+  // Signature at the end (auto page break)
   ensureSpace(200);
   y = await drawSignatureBlock(pdfDoc, page, {
     width,
@@ -388,4 +452,3 @@ export async function generateContractPdf({
   const bytes = await pdfDoc.save();
   return new Blob([bytes], { type: "application/pdf" });
 }
-

@@ -11,6 +11,8 @@ export default function App() {
     projectBrief: "",
     dateStart: "",
     dateEnd: "",
+    costOmr: "",
+    bankAccount: "",
   });
 
   const [signatureDataUrl, setSignatureDataUrl] = useState(null);
@@ -112,6 +114,18 @@ export default function App() {
             value={form.dateEnd}
             onChange={update("dateEnd")}
           />
+          <Field
+            label="Cost (OMR)"
+            value={form.costOmr}
+            onChange={update("costOmr")}
+            placeholder="e.g. 80"
+          />
+          <Field
+            label="Bank Account"
+            value={form.bankAccount}
+            onChange={update("bankAccount")}
+            placeholder="e.g. 0311056779010014"
+          />
         </div>
 
         <div>
@@ -169,11 +183,17 @@ export default function App() {
   );
 }
 
-function Field({ label, type = "text", value, onChange }) {
+function Field({ label, type = "text", value, onChange, placeholder }) {
   return (
     <div>
       <label style={labelStyle}>{label}</label>
-      <input type={type} value={value} onChange={onChange} style={inputStyle} />
+      <input
+        type={type}
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder}
+        style={inputStyle}
+      />
     </div>
   );
 }
