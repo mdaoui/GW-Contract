@@ -50,10 +50,37 @@ function wrapText(text, maxCharsPerLine = 95) {
 }
 
 async function fetchAsUint8Array(url) {
+  if (!url) throw new Error("Missing asset url");
+  if (String(url).startsWith("data:")) {
+    const comma = String(url).indexOf(",");
+    if (comma === -1) throw new Error("Invalid data URL");
+    const meta = String(url).slice(0, comma);
+    const data = String(url).slice(comma + 1);
+    if (!/;base64$/i.test(meta)) throw new Error("Only base64 data URLs are supported");
+    return Uint8Array.from(atob(data), (c) => c.charCodeAt(0));
+  }
   const res = await fetch(url);
   if (!res.ok) throw new Error(`Failed to load asset: ${url}`);
   const buf = await res.arrayBuffer();
   return new Uint8Array(buf);
+}
+
+function detectImageType(bytes) {
+  if (!bytes || bytes.length < 4) return "unknown";
+  // PNG signature: 89 50 4E 47 0D 0A 1A 0A
+  if (
+    bytes[0] === 0x89 &&
+    bytes[1] === 0x50 &&
+    bytes[2] === 0x4e &&
+    bytes[3] === 0x47
+  ) {
+    return "png";
+  }
+  // JPEG signature: FF D8 FF
+  if (bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) {
+    return "jpg";
+  }
+  return "unknown";
 }
 
 function drawLabeledLine(
@@ -178,7 +205,11 @@ async function drawCoverPage(
 
   try {
     const logoBytes = await fetchAsUint8Array(logoPath);
-    const logo = await pdfDoc.embedPng(logoBytes);
+    const kind = detectImageType(logoBytes);
+    const logo =
+      kind === "jpg"
+        ? await pdfDoc.embedJpg(logoBytes)
+        : await pdfDoc.embedPng(logoBytes);
 
     const targetW = 150;
     const ratio = targetW / logo.width;
@@ -190,8 +221,10 @@ async function drawCoverPage(
       width: targetW,
       height: targetH,
     });
-  } catch {
+  } catch (e) {
     // no logo: still generate PDF
+    // (keep this non-fatal, but visible in console for debugging)
+    console.warn("Logo failed to load/embed:", e);
   }
 
   return page;
