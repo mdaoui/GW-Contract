@@ -1,5 +1,6 @@
 import React, { useMemo, useRef, useState } from "react";
 import SignaturePad from "./ui/SignaturePad";
+import gwLogoUrl from "./assets/gw-logo.png";
 
 export default function App() {
   const [form, setForm] = useState({
@@ -57,6 +58,7 @@ export default function App() {
       const blob = await generateContractPdf({
         ...form,
         signaturePngDataUrl: sig,
+        logoPath: gwLogoUrl,
       });
       downloadBlob(blob, fileName);
     } finally {
