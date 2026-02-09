@@ -5,7 +5,9 @@ export default function App() {
   const [form, setForm] = useState({
     fullName: "",
     idCard: "",
+    projectNo: "",
     projectName: "",
+    contractDate: "",
     projectBrief: "",
     dateStart: "",
     dateEnd: "",
@@ -24,9 +26,10 @@ export default function App() {
 
     const name = safe(form.fullName) || "Unknown";
     const proj = safe(form.projectName) || "Project";
+    const projNo = safe(form.projectNo) || "";
     const start = form.dateStart || "Start";
-    return `Contract - ${name} - ${proj} - ${start}.pdf`;
-  }, [form.fullName, form.projectName, form.dateStart]);
+    return `Contract - ${name} - ${proj}${projNo ? ` (${projNo})` : ""} - ${start}.pdf`;
+  }, [form.fullName, form.projectName, form.projectNo, form.dateStart]);
 
   const update = (key) => (e) =>
     setForm((p) => ({ ...p, [key]: e.target.value }));
@@ -77,9 +80,20 @@ export default function App() {
           />
           <Field label="ID Card" value={form.idCard} onChange={update("idCard")} />
           <Field
+            label="Project No."
+            value={form.projectNo}
+            onChange={update("projectNo")}
+          />
+          <Field
             label="Project Name"
             value={form.projectName}
             onChange={update("projectName")}
+          />
+          <Field
+            label="Contract Date (optional)"
+            type="date"
+            value={form.contractDate}
+            onChange={update("contractDate")}
           />
           <Field
             label="Start Date"
