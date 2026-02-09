@@ -31,6 +31,14 @@ function formatDate(d) {
   return `${day}/${m}/${y}`;
 }
 
+function formatDateFromJsDate(date) {
+  if (!date) return "";
+  const dd = String(date.getDate()).padStart(2, "0");
+  const mm = String(date.getMonth() + 1).padStart(2, "0");
+  const yy = String(date.getFullYear());
+  return `${dd}/${mm}/${yy}`;
+}
+
 function wrapText(text, maxCharsPerLine = 95) {
   if (!text) return [""];
   const words = String(text).split(/\s+/);
@@ -137,6 +145,7 @@ async function drawCoverPage(
   page.drawText("WORK", { x: x0, y, size: 30, font: helv });
   y -= 44;
   page.drawText("CONTRACT", { x: x0, y, size: 30, font: helv });
+  const titleBottomY = y;
 
   y = 360;
 
@@ -211,13 +220,25 @@ async function drawCoverPage(
         ? await pdfDoc.embedJpg(logoBytes)
         : await pdfDoc.embedPng(logoBytes);
 
-    const targetW = 150;
-    const ratio = targetW / logo.width;
-    const targetH = logo.height * ratio;
+    // Place logo under the "FREELANCER / WORK / CONTRACT" title block,
+    // above the "CREATED BY" section.
+    const bandTop = titleBottomY - 20;
+    const bandBottom = 420;
+    const availableH = Math.max(1, bandTop - bandBottom);
+
+    let targetW = 150;
+    let ratio = targetW / logo.width;
+    let targetH = logo.height * ratio;
+
+    if (targetH > availableH) {
+      ratio = availableH / logo.height;
+      targetW = logo.width * ratio;
+      targetH = availableH;
+    }
 
     page.drawImage(logo, {
       x: x0,
-      y: 70,
+      y: bandBottom,
       width: targetW,
       height: targetH,
     });
@@ -235,7 +256,7 @@ async function drawCoverPage(
 async function drawSignatureBlock(
   pdfDoc,
   page,
-  { width, margin, y, font, fontBold, signaturePngDataUrl }
+  { width, margin, y, font, fontBold, signaturePngDataUrl, signedBy, signedDate }
 ) {
   y -= 16;
   page.drawText("Signature:", { x: margin, y, size: 12, font: fontBold });
@@ -285,10 +306,22 @@ async function drawSignatureBlock(
   y -= boxH + 18;
 
   page.drawText("Signed by:", { x: margin, y, size: 10, font: fontBold });
-  page.drawText("__________________________", { x: margin + 70, y, size: 10, font });
+  const signedByText = String(signedBy || "").trim().slice(0, 60);
+  page.drawText(signedByText || "__________________________", {
+    x: margin + 70,
+    y,
+    size: 10,
+    font,
+  });
 
   page.drawText("Date:", { x: width - margin - 170, y, size: 10, font: fontBold });
-  page.drawText("________________", { x: width - margin - 130, y, size: 10, font });
+  const signedDateText = String(signedDate || "").trim();
+  page.drawText(signedDateText || "________________", {
+    x: width - margin - 130,
+    y,
+    size: 10,
+    font,
+  });
 
   return y - 14;
 }
@@ -311,6 +344,7 @@ export async function generateContractPdf({
   logoPath = `${import.meta.env.BASE_URL}assets/gw-logo.png`,
 }) {
   const pdfDoc = await PDFDocument.create();
+  const today = formatDateFromJsDate(new Date());
 
   await drawCoverPage(pdfDoc, {
     createdBy,
@@ -480,6 +514,8 @@ export async function generateContractPdf({
     font,
     fontBold,
     signaturePngDataUrl,
+    signedBy: fullName,
+    signedDate: today,
   });
 
   const bytes = await pdfDoc.save();
