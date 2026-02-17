@@ -2,6 +2,7 @@ import React, { useMemo, useRef, useState } from "react";
 import SignaturePad from "./ui/SignaturePad";
 import gwLogoUrl from "./assets/gw-logo.png";
 import gwLogoBlackUrl from "./assets/GW Logo Black version.jpg";
+import { projectBriefPresets, projectBriefRoleOptions } from "./data/projectBriefPresets";
 
 export default function App() {
   const [form, setForm] = useState({
@@ -14,21 +15,15 @@ export default function App() {
     dateStart: "",
     dateEnd: "",
     costOmr: "",
+    bankName: "Bank Muscat",
     bankAccount: "",
     employerName: "",
   });
 
   const [signatureDataUrl, setSignatureDataUrl] = useState(null);
   const [busy, setBusy] = useState(false);
+  const [briefRole, setBriefRole] = useState("");
   const signatureApiRef = useRef(null);
-
-  const signedDateDisplay = useMemo(() => {
-    if (form.contractDate) {
-      const [y, m, d] = String(form.contractDate).split("-");
-      if (y && m && d) return `${d}/${m}/${y}`;
-    }
-    return new Date().toLocaleDateString("en-GB");
-  }, [form.contractDate]);
 
   const fileName = useMemo(() => {
     const safe = (s) =>
@@ -47,6 +42,15 @@ export default function App() {
 
   const update = (key) => (e) =>
     setForm((p) => ({ ...p, [key]: e.target.value }));
+  const onBriefRoleChange = (e) => {
+    const role = e.target.value;
+    setBriefRole(role);
+    if (!role) return;
+    setForm((p) => ({
+      ...p,
+      projectBrief: projectBriefPresets[role] ?? "",
+    }));
+  };
 
   const downloadBlob = (blob, name) => {
     const url = URL.createObjectURL(blob);
@@ -149,8 +153,22 @@ export default function App() {
             onChange={update("costOmr")}
             placeholder="e.g. 150"
           />
+          <SelectField
+            label="Bank Name"
+            value={form.bankName}
+            onChange={update("bankName")}
+            options={[
+              "Bank Muscat",
+              "NBO",
+              "Oman Arab Bank",
+              "Sohar International",
+              "Nizwa Bank",
+              "Dhofar Bank",
+            ]}
+            placeholder="Select bank"
+          />
           <Field
-            label="Bank Account Number (Bank Muscat)"
+            label="Bank Account Number"
             value={form.bankAccount}
             onChange={update("bankAccount")}
             placeholder="e.g. 0311056779010014"
@@ -158,6 +176,13 @@ export default function App() {
         </div>
 
         <div>
+          <SelectField
+            label="Brief Preset"
+            value={briefRole}
+            onChange={onBriefRoleChange}
+            options={projectBriefRoleOptions}
+            placeholder="Select role preset"
+          />
           <label style={labelStyle}>Project Brief</label>
           <textarea
             value={form.projectBrief}
@@ -180,36 +205,13 @@ export default function App() {
           </div>
 
           <h3 style={{ marginBottom: 8 }}>Employer Signature</h3>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1fr auto",
-              gap: 12,
-              alignItems: "end",
-              marginBottom: 80,
-            }}
-          >
+          <div style={{ marginBottom: 20 }}>
             <Field
               label="Signed by"
               value={form.employerName}
               onChange={update("employerName")}
               placeholder="Employer name"
             />
-            <div style={{ minWidth: 160 }}>
-              <label style={labelStyle}>Date</label>
-              <div
-                style={{
-                  ...inputStyle,
-                  display: "flex",
-                  alignItems: "center",
-                  height: 42,
-                  padding: "0 10px",
-                  color: "#e5e7eb",
-                }}
-              >
-                {signedDateDisplay}
-              </div>
-            </div>
           </div>
 
           <SignaturePad apiRef={signatureApiRef} onChange={setSignatureDataUrl} />
@@ -267,6 +269,22 @@ function Field({ label, type = "text", value, onChange, placeholder }) {
         placeholder={placeholder}
         style={inputStyle}
       />
+    </div>
+  );
+}
+
+function SelectField({ label, value, onChange, options, placeholder }) {
+  return (
+    <div>
+      <label style={labelStyle}>{label}</label>
+      <select value={value} onChange={onChange} style={inputStyle}>
+        <option value="">{placeholder}</option>
+        {options.map((opt) => (
+          <option key={opt} value={opt}>
+            {opt}
+          </option>
+        ))}
+      </select>
     </div>
   );
 }

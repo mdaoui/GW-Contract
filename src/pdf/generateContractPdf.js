@@ -31,14 +31,6 @@ function formatDate(d) {
   return `${day}/${m}/${y}`;
 }
 
-function formatDateFromJsDate(date) {
-  if (!date) return "";
-  const dd = String(date.getDate()).padStart(2, "0");
-  const mm = String(date.getMonth() + 1).padStart(2, "0");
-  const yy = String(date.getFullYear());
-  return `${dd}/${mm}/${yy}`;
-}
-
 function wrapText(text, maxCharsPerLine = 95) {
   if (!text) return [""];
   const words = String(text).split(/\s+/);
@@ -55,6 +47,16 @@ function wrapText(text, maxCharsPerLine = 95) {
   }
   if (line) lines.push(line);
   return lines;
+}
+
+function splitParagraphs(text) {
+  if (text == null) return [""];
+  const raw = String(text).replace(/\r\n/g, "\n");
+  const parts = raw
+    .split(/\n\s*\n/g)
+    .map((p) => p.trim())
+    .filter((p) => p.length > 0);
+  return parts.length ? parts : [""];
 }
 
 async function fetchAsUint8Array(url) {
@@ -381,14 +383,14 @@ export async function generateContractPdf({
   dateStart,
   dateEnd,
   costOmr,
+  bankName,
   bankAccount,
   signaturePngDataUrl,
   employerName,
   logoPath = `${import.meta.env.BASE_URL}assets/gw-logo.png`,
 }) {
   const pdfDoc = await PDFDocument.create();
-  const today = formatDateFromJsDate(new Date());
-  const signedDate = contractDate ? formatDate(contractDate) : today;
+  const signedDate = contractDate ? formatDate(contractDate) : "";
 
   await drawCoverPage(pdfDoc, {
     createdBy,
@@ -429,14 +431,22 @@ export async function generateContractPdf({
 
   const drawParagraph = (text, size = 11) => {
     const maxChars = Math.floor((width - margin * 2) / (size * 0.55));
-    const lines = wrapText(text, maxChars);
-    ensureSpace(lines.length * lineH + 14);
+    const paragraphs = splitParagraphs(text);
+    const paragraphGap = 8;
+    const paragraphBlocks = paragraphs.map((p) => wrapText(p, maxChars));
+    const lineCount = paragraphBlocks.reduce((total, lines) => total + lines.length, 0);
+    const breaks = Math.max(0, paragraphBlocks.length - 1);
 
-    for (const line of lines) {
-      page.drawText(line, { x: margin, y, size, font });
-      y -= lineH;
+    ensureSpace(lineCount * lineH + breaks * paragraphGap + 14);
+
+    for (let i = 0; i < paragraphBlocks.length; i++) {
+      for (const line of paragraphBlocks[i]) {
+        page.drawText(line, { x: margin, y, size, font });
+        y -= lineH;
+      }
+      if (i < paragraphBlocks.length - 1) y -= paragraphGap;
     }
-    y -= 6;
+    y -= 8;
   };
 
   const drawBullets = (items) => {
@@ -452,9 +462,9 @@ export async function generateContractPdf({
         page.drawText(lines[i], { x: margin + 14, y, size: 11, font });
         y -= lineH;
       }
-      y -= 2;
+      y -= 4;
     }
-    y -= 6;
+    y -= 8;
   };
 
   // Body header/meta
@@ -516,7 +526,10 @@ export async function generateContractPdf({
 
   // PAYMENT (dynamic)
   drawHeading("PAYMENT");
-  drawBullets([`Contract costing will be ${costOmr ?? ""} OMR`, `Bank Muscat: ${bankAccount ?? ""}`]);
+  drawBullets([
+    `Contract costing will be ${costOmr ?? ""} OMR`,
+    `${bankName || "Bank Muscat"}: ${bankAccount ?? ""}`,
+  ]);
 
   // PAYMENT POLICY
   drawHeading("PAYMENT POLICY");
