@@ -106,10 +106,12 @@ export default function App() {
           style={{ height: 100, width: "auto", objectFit: "contain" }}
         />
       </header>
-      <h1 style={{ marginBottom: 6 }}>Contract PDF Generator</h1>
-      <p style={{ marginTop: 0, color: "#94a3b8" }}>
-        Contract creator made by (MD for GW Production Team)
-      </p>
+      <div style={{ textAlign: "center", marginBottom: 12 }}>
+        <h1 style={{ marginBottom: 6 }}>Contract PDF Generator V1.0</h1>
+        <p style={{ marginTop: 0, color: "#94a3b8" }}>
+          Contract creator made by (MD for GW Production Team)
+        </p>
+      </div>
 
       <div style={{ display: "grid", gap: 12 }}>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>

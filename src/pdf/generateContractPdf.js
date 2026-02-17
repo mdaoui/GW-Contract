@@ -49,16 +49,6 @@ function wrapText(text, maxCharsPerLine = 95) {
   return lines;
 }
 
-function splitParagraphs(text) {
-  if (text == null) return [""];
-  const raw = String(text).replace(/\r\n/g, "\n");
-  const parts = raw
-    .split(/\n\s*\n/g)
-    .map((p) => p.trim())
-    .filter((p) => p.length > 0);
-  return parts.length ? parts : [""];
-}
-
 async function fetchAsUint8Array(url) {
   if (!url) throw new Error("Missing asset url");
   if (String(url).startsWith("data:")) {
@@ -267,18 +257,30 @@ async function drawSignatureBlock(
     fontBold,
     signaturePngDataUrl,
     employerName,
-    signedDate,
     freelancerName,
   }
 ) {
-  y -= 16;
-  page.drawText("Signature:", { x: margin, y, size: 12, font: fontBold });
+  const colGap = 20;
+  const boxW = (width - margin * 2 - colGap) / 2;
+  const boxH = 70;
+  const leftX = margin;
+  const rightX = margin + boxW + colGap;
+
+  y -= 14;
+  page.drawText("EMPLOYER SIGNATURE", { x: leftX, y, size: 11, font: fontBold });
+  page.drawText("FREELANCER SIGNATURE", { x: rightX, y, size: 11, font: fontBold });
   y -= 10;
 
-  const boxW = 260;
-  const boxH = 90;
   page.drawRectangle({
-    x: margin,
+    x: leftX,
+    y: y - boxH,
+    width: boxW,
+    height: boxH,
+    borderColor: rgb(0.75, 0.75, 0.75),
+    borderWidth: 1,
+  });
+  page.drawRectangle({
+    x: rightX,
     y: y - boxH,
     width: boxW,
     height: boxH,
@@ -302,72 +304,41 @@ async function drawSignatureBlock(
     const drawW = dims.width * ratio;
     const drawH = dims.height * ratio;
 
-    const x = margin + pad + (targetW - drawW) / 2;
+    const x = leftX + pad + (targetW - drawW) / 2;
     const yy = y - boxH + pad + (targetH - drawH) / 2;
 
     page.drawImage(png, { x, y: yy, width: drawW, height: drawH });
   } else {
     page.drawText("(No signature provided)", {
-      x: margin + 12,
-      y: y - 40,
+      x: leftX + 10,
+      y: y - 38,
       size: 10,
       font,
       color: rgb(0.5, 0.5, 0.5),
     });
   }
 
-  y -= boxH + 18;
+  y -= boxH + 14;
 
-  page.drawText("Signed by:", { x: margin, y, size: 10, font: fontBold });
+  page.drawText("Signed by:", { x: leftX, y, size: 10, font: fontBold });
   const employerNameText = String(employerName || "").trim().slice(0, 60);
   page.drawText(employerNameText || "__________________________", {
-    x: margin + 70,
+    x: leftX + 58,
     y,
     size: 10,
     font,
   });
 
-  page.drawText("Date:", { x: width - margin - 170, y, size: 10, font: fontBold });
-  const signedDateText = String(signedDate || "").trim();
-  page.drawText(signedDateText || "________________", {
-    x: width - margin - 130,
+  page.drawText("By:", { x: rightX, y, size: 10, font: fontBold });
+  const freelancerNameText = String(freelancerName || "").trim().slice(0, 60);
+  page.drawText(freelancerNameText || "__________________________", {
+    x: rightX + 20,
     y,
     size: 10,
     font,
   });
 
-  y -= 34;
-
-  page.drawText("FREELANCER / CANDIDATE:", { x: margin, y, size: 12, font: fontBold });
-  y -= 18;
-
-  drawLabeledLine(page, {
-    label: "By: ",
-    value: String(freelancerName || "").trim() || "__________________________",
-    x: margin,
-    y,
-    labelFont: fontBold,
-    valueFont: fontBold,
-    labelSize: 12,
-    valueSize: 12,
-    gap: 2,
-  });
-
-  y -= 22;
-
-  // Blank signature space for freelancer (intentionally empty)
-  page.drawText("Signature:", { x: margin, y, size: 12, font: fontBold });
-  y -= 10;
-  page.drawRectangle({
-    x: margin,
-    y: y - boxH,
-    width: boxW,
-    height: boxH,
-    borderColor: rgb(0.75, 0.75, 0.75),
-    borderWidth: 1,
-  });
-
-  return y - boxH - 14;
+  return y - 16;
 }
 
 /** ---------- Main Generator ---------- **/
@@ -390,7 +361,6 @@ export async function generateContractPdf({
   logoPath = `${import.meta.env.BASE_URL}assets/gw-logo.png`,
 }) {
   const pdfDoc = await PDFDocument.create();
-  const signedDate = contractDate ? formatDate(contractDate) : "";
 
   await drawCoverPage(pdfDoc, {
     createdBy,
@@ -423,6 +393,11 @@ export async function generateContractPdf({
     if (y - needed < margin) addPage();
   };
 
+  const drawSectionGap = (gap = 12) => {
+    ensureSpace(gap + 4);
+    y -= gap;
+  };
+
   const drawHeading = (text) => {
     ensureSpace(28);
     page.drawText(text, { x: margin, y, size: 12, font: fontBold });
@@ -431,22 +406,14 @@ export async function generateContractPdf({
 
   const drawParagraph = (text, size = 11) => {
     const maxChars = Math.floor((width - margin * 2) / (size * 0.55));
-    const paragraphs = splitParagraphs(text);
-    const paragraphGap = 8;
-    const paragraphBlocks = paragraphs.map((p) => wrapText(p, maxChars));
-    const lineCount = paragraphBlocks.reduce((total, lines) => total + lines.length, 0);
-    const breaks = Math.max(0, paragraphBlocks.length - 1);
+    const lines = wrapText(text, maxChars);
+    ensureSpace(lines.length * lineH + 14);
 
-    ensureSpace(lineCount * lineH + breaks * paragraphGap + 14);
-
-    for (let i = 0; i < paragraphBlocks.length; i++) {
-      for (const line of paragraphBlocks[i]) {
-        page.drawText(line, { x: margin, y, size, font });
-        y -= lineH;
-      }
-      if (i < paragraphBlocks.length - 1) y -= paragraphGap;
+    for (const line of lines) {
+      page.drawText(line, { x: margin, y, size, font });
+      y -= lineH;
     }
-    y -= 8;
+    y -= 6;
   };
 
   const drawBullets = (items) => {
@@ -462,9 +429,18 @@ export async function generateContractPdf({
         page.drawText(lines[i], { x: margin + 14, y, size: 11, font });
         y -= lineH;
       }
-      y -= 4;
+      y -= 2;
     }
-    y -= 8;
+    y -= 6;
+  };
+
+  const estimateBulletsHeight = (items) => {
+    let total = 6; // trailing list gap
+    for (const item of items) {
+      const lines = wrapText(item, 95);
+      total += lines.length * lineH + 2;
+    }
+    return total;
   };
 
   // Body header/meta
@@ -497,7 +473,7 @@ export async function generateContractPdf({
     "We are handling the communication with the client and any other creative work.",
     11
   );
-
+  drawSectionGap(14);
   // COMMUNICATION
   drawHeading("COMMUNICATION");
   drawBullets([
@@ -509,6 +485,8 @@ export async function generateContractPdf({
     "Freelancer will connect with the Head of production.",
   ]);
 
+  drawSectionGap(14);
+
   // CONFIDENTIALITY
   drawHeading("CONFIDENTIALITY");
   drawBullets([
@@ -517,6 +495,8 @@ export async function generateContractPdf({
     "This provision shall continue to be effective after the termination of this Contract.",
   ]);
 
+  drawSectionGap(14);
+
   // OWNERSHIP OF RIGHTS
   drawHeading("OWNERSHIP OF RIGHTS");
   drawBullets([
@@ -524,12 +504,18 @@ export async function generateContractPdf({
     "Freelancer Not allowed to publish any projects on social media platforms or any online platform.",
   ]);
 
+  drawSectionGap(14);
+
   // PAYMENT (dynamic)
-  drawHeading("PAYMENT");
-  drawBullets([
+  const paymentItems = [
     `Contract costing will be ${costOmr ?? ""} OMR`,
     `${bankName || "Bank Muscat"}: ${bankAccount ?? ""}`,
-  ]);
+  ];
+  // Keep heading + both payment bullets on the same page.
+  ensureSpace(28 + estimateBulletsHeight(paymentItems));
+  drawHeading("PAYMENT");
+  drawBullets(paymentItems);
+
 
   // PAYMENT POLICY
   drawHeading("PAYMENT POLICY");
@@ -544,6 +530,8 @@ export async function generateContractPdf({
   drawHeading("PROJECT TIMELINE");
   drawBullets(["The project will be going on until the project finishes."]);
 
+  drawSectionGap(14);
+
   // AGREEMENT
   drawHeading("AGREEMENT");
   drawBullets([
@@ -551,6 +539,8 @@ export async function generateContractPdf({
     "Agreement will be considered as the legal document for both company and the freelancer.",
     "Agreement cannot be altered once agreed between both parties.",
   ]);
+
+  drawSectionGap(14);
 
   // TERMINATION CLAUSE
   drawHeading("TERMINATION CLAUSE");
@@ -563,7 +553,7 @@ export async function generateContractPdf({
   ]);
 
   // Signature at the end (auto page break)
-  ensureSpace(320);
+  ensureSpace(160);
   y = await drawSignatureBlock(pdfDoc, page, {
     width,
     margin,
@@ -572,7 +562,6 @@ export async function generateContractPdf({
     fontBold,
     signaturePngDataUrl,
     employerName,
-    signedDate,
     freelancerName: fullName,
   });
 
