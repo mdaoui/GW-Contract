@@ -2,6 +2,22 @@ import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 
 /** ---------- Helpers ---------- **/
 
+function hasArabic(text) {
+  return /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/.test(
+    String(text || "")
+  );
+}
+
+let _arabicFontBytes = null;
+async function loadArabicFontBytes() {
+  if (_arabicFontBytes) return _arabicFontBytes;
+  const url = `${import.meta.env.BASE_URL}assets/Amiri-Regular.ttf`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Failed to load Arabic font: ${url}`);
+  _arabicFontBytes = await res.arrayBuffer();
+  return _arabicFontBytes;
+}
+
 function formatCoverDate(input) {
   if (!input) return "";
   const [y, m, d] = String(input).split("-");
@@ -95,15 +111,25 @@ function drawLabeledLine(
     labelSize = 12,
     valueSize = 12,
     gap = 0,
+    arabicFont = null,
+    rightEdge = null,
   }
 ) {
   const labelW = labelFont.widthOfTextAtSize(label, labelSize);
   page.drawText(label, { x, y, size: labelSize, font: labelFont, color: rgb(0, 0, 0) });
+
+  const isAr = arabicFont && hasArabic(value);
+  const fv = isAr ? arabicFont : valueFont;
+  const valueX =
+    isAr && rightEdge != null
+      ? rightEdge - fv.widthOfTextAtSize(value || "", valueSize)
+      : x + labelW + gap;
+
   page.drawText(value || "", {
-    x: x + labelW + gap,
+    x: valueX,
     y,
     size: valueSize,
-    font: valueFont,
+    font: fv,
     color: rgb(0, 0, 0),
   });
 }
@@ -121,10 +147,11 @@ async function drawCoverPage(
     contractDate,
     dateStart,
     logoPath = `${import.meta.env.BASE_URL}assets/gw-logo.png`,
+    arabicFont = null,
   }
 ) {
   const page = pdfDoc.addPage([595.28, 841.89]); // A4 portrait
-  const { height } = page.getSize();
+  const { width, height } = page.getSize();
 
   const helv = await pdfDoc.embedFont(StandardFonts.Helvetica);
   const helvBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
@@ -149,6 +176,8 @@ async function drawCoverPage(
   page.drawText("PREPARED FOR:", { x: x0, y, size: 12, font: helvBold });
   y -= 22;
 
+  const rightEdge = width - x0;
+
   drawLabeledLine(page, {
     label: "Name: ",
     value: fullName || "",
@@ -158,6 +187,8 @@ async function drawCoverPage(
     valueFont: helvBold,
     labelSize: 12,
     valueSize: 12,
+    arabicFont,
+    rightEdge,
   });
   y -= 20;
 
@@ -170,6 +201,8 @@ async function drawCoverPage(
     valueFont: helvBold,
     labelSize: 12,
     valueSize: 12,
+    arabicFont,
+    rightEdge,
   });
 
   y -= 44;
@@ -183,6 +216,8 @@ async function drawCoverPage(
     valueFont: helv,
     labelSize: 13,
     valueSize: 12,
+    arabicFont,
+    rightEdge,
   });
 
   y -= 36;
@@ -196,6 +231,8 @@ async function drawCoverPage(
     valueFont: helv,
     labelSize: 13,
     valueSize: 12,
+    arabicFont,
+    rightEdge,
   });
   y -= 36;
 
@@ -258,6 +295,7 @@ async function drawSignatureBlock(
     signaturePngDataUrl,
     employerName,
     freelancerName,
+    arabicFont = null,
   }
 ) {
   const colGap = 20;
@@ -322,20 +360,22 @@ async function drawSignatureBlock(
 
   page.drawText("Signed by:", { x: leftX, y, size: 10, font: fontBold });
   const employerNameText = String(employerName || "").trim().slice(0, 60);
+  const empIsAr = arabicFont && hasArabic(employerNameText);
   page.drawText(employerNameText || "__________________________", {
-    x: leftX + 58,
+    x: empIsAr ? leftX + boxW - arabicFont.widthOfTextAtSize(employerNameText, 10) : leftX + 58,
     y,
     size: 10,
-    font,
+    font: empIsAr ? arabicFont : font,
   });
 
   page.drawText("By:", { x: rightX, y, size: 10, font: fontBold });
   const freelancerNameText = String(freelancerName || "").trim().slice(0, 60);
+  const frIsAr = arabicFont && hasArabic(freelancerNameText);
   page.drawText(freelancerNameText || "__________________________", {
-    x: rightX + 20,
+    x: frIsAr ? rightX + boxW - arabicFont.widthOfTextAtSize(freelancerNameText, 10) : rightX + 20,
     y,
     size: 10,
-    font,
+    font: frIsAr ? arabicFont : font,
   });
 
   return y - 16;
@@ -362,6 +402,14 @@ export async function generateContractPdf({
 }) {
   const pdfDoc = await PDFDocument.create();
 
+  // Load Arabic font once if any user-supplied field contains Arabic text
+  const userFields = [fullName, idCard, projectNo, projectName, projectBrief, employerName];
+  let arabicFont = null;
+  if (userFields.some(hasArabic)) {
+    const fontBytes = await loadArabicFontBytes();
+    arabicFont = await pdfDoc.embedFont(fontBytes);
+  }
+
   await drawCoverPage(pdfDoc, {
     createdBy,
     fullName,
@@ -371,6 +419,7 @@ export async function generateContractPdf({
     contractDate,
     dateStart,
     logoPath,
+    arabicFont,
   });
 
   let page = pdfDoc.addPage([595.28, 841.89]);
@@ -405,12 +454,15 @@ export async function generateContractPdf({
   };
 
   const drawParagraph = (text, size = 11) => {
+    const isAr = arabicFont && hasArabic(text);
+    const f = isAr ? arabicFont : font;
     const maxChars = Math.floor((width - margin * 2) / (size * 0.55));
     const lines = wrapText(text, maxChars);
     ensureSpace(lines.length * lineH + 14);
 
     for (const line of lines) {
-      page.drawText(line, { x: margin, y, size, font });
+      const x = isAr ? width - margin - f.widthOfTextAtSize(line, size) : margin;
+      page.drawText(line, { x, y, size, font: f });
       y -= lineH;
     }
     y -= 6;
@@ -563,6 +615,7 @@ export async function generateContractPdf({
     signaturePngDataUrl,
     employerName,
     freelancerName: fullName,
+    arabicFont,
   });
 
   const bytes = await pdfDoc.save();

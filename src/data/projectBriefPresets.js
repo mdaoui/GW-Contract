@@ -10,6 +10,7 @@ export const projectBriefRoleOptions = [
   "Director",
   "Camera Operator",
   "DOP",
+  "Voiceover",
 ];
 
 // Edit these templates any time. The selected role will populate the Project Brief field.
@@ -25,4 +26,6 @@ export const projectBriefPresets = {
   "Director": "Director services were commissioned. The scope of work included overseeing the entire production process, guiding the creative vision, coordinating with all departments (photography, motion, lighting, and editing), making key artistic and technical decisions, and ensuring the final deliverables meet the project objectives and organizational standards.",
   "Camera Operator": "Camera Operator services were commissioned. The scope of work included operating cameras to capture high-quality footage, framing and composing shots according to the director’s vision, adjusting camera settings for optimal exposure and focus, and ensuring smooth and consistent coverage throughout the production.",
   "DOP": "Director of Photography (DOP) services were commissioned. The scope of work included designing and executing the overall visual look of the production, selecting camera angles, lenses, and lighting setups, collaborating closely with the director to achieve the desired cinematic style, and ensuring high-quality visual storytelling throughout the shoot.",
+  "Voiceover": "Voice-over services were commissioned. The scope of work included delivering clear and engaging vocal performances, interpreting scripts to convey the intended tone and message, adjusting voice style and pacing to suit the content, and collaborating with the team to ensure high-quality audio that enhances the overall storytelling.",
+
 };
