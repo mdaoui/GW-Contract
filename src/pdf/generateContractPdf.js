@@ -170,7 +170,14 @@ async function drawCoverPage(
 
   page.drawText("CREATED BY:", { x: x0, y, size: 12, font: helvBold });
   y -= 18;
-  page.drawText(createdBy || "Galaxy Way Adv", { x: x0, y, size: 14, font: helv });
+  const createdByText = String(createdBy || "Galaxy Way Adv").trim().slice(0, 60);
+  const createdByIsAr = arabicFont && hasArabic(createdByText);
+  page.drawText(createdByText || "Galaxy Way Adv", {
+    x: createdByIsAr ? width - x0 - arabicFont.widthOfTextAtSize(createdByText, 14) : x0,
+    y,
+    size: 14,
+    font: createdByIsAr ? arabicFont : helv,
+  });
 
   y -= 40;
   page.drawText("PREPARED FOR:", { x: x0, y, size: 12, font: helvBold });
@@ -403,7 +410,7 @@ export async function generateContractPdf({
   const pdfDoc = await PDFDocument.create();
 
   // Load Arabic font once if any user-supplied field contains Arabic text
-  const userFields = [fullName, idCard, projectNo, projectName, projectBrief, employerName];
+  const userFields = [createdBy, fullName, idCard, projectNo, projectName, projectBrief, employerName];
   let arabicFont = null;
   if (userFields.some(hasArabic)) {
     const fontBytes = await loadArabicFontBytes();

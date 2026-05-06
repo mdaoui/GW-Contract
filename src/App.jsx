@@ -6,6 +6,7 @@ import { projectBriefPresets, projectBriefRoleOptions } from "./data/projectBrie
 
 export default function App() {
   const [form, setForm] = useState({
+    createdBy: "Galaxy Way Adv",
     fullName: "",
     idCard: "",
     projectNo: "",
@@ -196,7 +197,7 @@ export default function App() {
         </div>
 
         <div>
-          <h3 style={{ marginBottom: 8 }}>Freelancer / Candidate</h3>
+          <h3 style={sectionHeadingStyle}>Freelancer / Candidate</h3>
           <div style={{ marginBottom: 18 }}>
             <Field
               label="By:"
@@ -206,13 +207,20 @@ export default function App() {
             />
           </div>
 
-          <h3 style={{ marginBottom: 8 }}>Employer Signature</h3>
+          <h3 style={sectionHeadingStyle}>Employer Signature</h3>
           <div style={{ marginBottom: 20 }}>
             <Field
               label="Signed by"
               value={form.employerName}
               onChange={update("employerName")}
               placeholder="Employer name"
+            />
+            <Field
+              label="Contract creator name"
+              value={form.createdBy}
+              onChange={update("createdBy")}
+              placeholder="Who created this contract"
+              labelStyleOverride={sectionLabelStyle}
             />
           </div>
 
@@ -260,10 +268,10 @@ export default function App() {
   );
 }
 
-function Field({ label, type = "text", value, onChange, placeholder }) {
+function Field({ label, type = "text", value, onChange, placeholder, labelStyleOverride }) {
   return (
     <div>
-      <label style={labelStyle}>{label}</label>
+      <label style={{ ...labelStyle, ...labelStyleOverride }}>{label}</label>
       <input
         type={type}
         value={value}
@@ -291,11 +299,22 @@ function SelectField({ label, value, onChange, options, placeholder }) {
   );
 }
 
+const sectionHeadingStyle = {
+  marginBottom: 8,
+};
+
 const labelStyle = {
   display: "block",
   fontSize: 12,
   color: "#94a3b8",
   marginBottom: 6,
+};
+
+const sectionLabelStyle = {
+  fontSize: "1.17em",
+  fontWeight: "bold",
+  color: "inherit",
+  marginBottom: 8,
 };
 
 const inputStyle = {
