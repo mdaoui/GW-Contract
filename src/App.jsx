@@ -3,6 +3,7 @@ import SignaturePad from "./ui/SignaturePad";
 import gwLogoUrl from "./assets/gw-logo.png";
 import gwLogoBlackUrl from "./assets/GW Logo Black version.jpg";
 import { projectBriefPresets, projectBriefRoleOptions } from "./data/projectBriefPresets";
+import { personPresetMap, personPresetOptions } from "./data/personPresets";
 
 export default function App() {
   const [form, setForm] = useState({
@@ -50,6 +51,22 @@ export default function App() {
     setForm((p) => ({
       ...p,
       projectBrief: projectBriefPresets[role] ?? "",
+    }));
+  };
+  const onFullNameChange = (e) => {
+    const fullName = e.target.value;
+    const preset = personPresetMap[fullName];
+
+    setForm((p) => ({
+      ...p,
+      fullName,
+      ...(preset
+        ? {
+            idCard: preset.idCard,
+            bankName: preset.bankName || p.bankName,
+            bankAccount: preset.bankAccount,
+          }
+        : null),
     }));
   };
 
@@ -119,8 +136,15 @@ export default function App() {
           <Field
             label="Full Name"
             value={form.fullName}
-            onChange={update("fullName")}
+            onChange={onFullNameChange}
+            list="person-presets"
+            placeholder="Type name or select preset"
           />
+          <datalist id="person-presets">
+            {personPresetOptions.map((name) => (
+              <option key={name} value={name} />
+            ))}
+          </datalist>
           <Field label="National ID Card" value={form.idCard} onChange={update("idCard")} />
           <Field
             label="Project No."
@@ -202,7 +226,7 @@ export default function App() {
             <Field
               label="By:"
               value={form.fullName}
-              onChange={update("fullName")}
+              onChange={onFullNameChange}
               placeholder="Freelancer name"
             />
           </div>
@@ -268,7 +292,15 @@ export default function App() {
   );
 }
 
-function Field({ label, type = "text", value, onChange, placeholder, labelStyleOverride }) {
+function Field({
+  label,
+  type = "text",
+  value,
+  onChange,
+  placeholder,
+  labelStyleOverride,
+  list,
+}) {
   return (
     <div>
       <label style={{ ...labelStyle, ...labelStyleOverride }}>{label}</label>
@@ -277,6 +309,7 @@ function Field({ label, type = "text", value, onChange, placeholder, labelStyleO
         value={value}
         onChange={onChange}
         placeholder={placeholder}
+        list={list}
         style={inputStyle}
       />
     </div>
