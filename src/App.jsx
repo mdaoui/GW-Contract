@@ -44,17 +44,7 @@ export default function App() {
 
   const update = (key) => (e) =>
     setForm((p) => ({ ...p, [key]: e.target.value }));
-  const onBriefRoleChange = (e) => {
-    const role = e.target.value;
-    setBriefRole(role);
-    if (!role) return;
-    setForm((p) => ({
-      ...p,
-      projectBrief: projectBriefPresets[role] ?? "",
-    }));
-  };
-  const onFullNameChange = (e) => {
-    const fullName = e.target.value;
+  const applyFullName = (fullName) => {
     const preset = personPresetMap[fullName];
 
     setForm((p) => ({
@@ -68,6 +58,18 @@ export default function App() {
           }
         : null),
     }));
+  };
+  const onBriefRoleChange = (e) => {
+    const role = e.target.value;
+    setBriefRole(role);
+    if (!role) return;
+    setForm((p) => ({
+      ...p,
+      projectBrief: projectBriefPresets[role] ?? "",
+    }));
+  };
+  const onFullNameChange = (e) => {
+    applyFullName(e.target.value);
   };
 
   const downloadBlob = (blob, name) => {
@@ -133,18 +135,13 @@ export default function App() {
 
       <div style={{ display: "grid", gap: 12 }}>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-          <Field
+          <PresetNameField
             label="Full Name"
             value={form.fullName}
-            onChange={onFullNameChange}
-            list="person-presets"
+            onChangeValue={applyFullName}
+            options={personPresetOptions}
             placeholder="Type name or select preset"
           />
-          <datalist id="person-presets">
-            {personPresetOptions.map((name) => (
-              <option key={name} value={name} />
-            ))}
-          </datalist>
           <Field label="National ID Card" value={form.idCard} onChange={update("idCard")} />
           <Field
             label="Project No."
@@ -223,10 +220,11 @@ export default function App() {
         <div>
           <h3 style={sectionHeadingStyle}>Freelancer / Candidate</h3>
           <div style={{ marginBottom: 18 }}>
-            <Field
+            <PresetNameField
               label="By:"
               value={form.fullName}
-              onChange={onFullNameChange}
+              onChangeValue={applyFullName}
+              options={personPresetOptions}
               placeholder="Freelancer name"
             />
           </div>
@@ -316,18 +314,82 @@ function Field({
   );
 }
 
+function PresetNameField({ label, value, onChangeValue, options, placeholder }) {
+  const [isOpen, setIsOpen] = useState(false);
+
+  const normalizedValue = String(value || "").trim().toLowerCase();
+  const filteredOptions = normalizedValue
+    ? options.filter((option) => option.toLowerCase().includes(normalizedValue))
+    : options;
+
+  return (
+    <div
+      onBlur={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget)) setIsOpen(false);
+      }}
+      style={{ position: "relative" }}
+    >
+      <label style={labelStyle}>{label}</label>
+      <div style={comboFieldStyle}>
+        <input
+          type="text"
+          value={value}
+          onChange={(e) => onChangeValue(e.target.value)}
+          placeholder={placeholder}
+          style={comboInputStyle}
+        />
+        <button
+          type="button"
+          aria-label={`Show presets for ${label}`}
+          aria-expanded={isOpen}
+          onClick={() => setIsOpen((open) => !open)}
+          style={comboButtonStyle}
+        >
+          ▾
+        </button>
+      </div>
+      {isOpen ? (
+        <div style={comboMenuStyle}>
+          {filteredOptions.length ? (
+            filteredOptions.map((option) => (
+              <button
+                key={option}
+                type="button"
+                onClick={() => {
+                  onChangeValue(option);
+                  setIsOpen(false);
+                }}
+                style={comboOptionStyle}
+              >
+                {option}
+              </button>
+            ))
+          ) : (
+            <div style={comboEmptyStyle}>No matching preset</div>
+          )}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 function SelectField({ label, value, onChange, options, placeholder }) {
   return (
     <div>
       <label style={labelStyle}>{label}</label>
-      <select value={value} onChange={onChange} style={inputStyle}>
-        <option value="">{placeholder}</option>
-        {options.map((opt) => (
-          <option key={opt} value={opt}>
-            {opt}
-          </option>
-        ))}
-      </select>
+      <div style={{ position: "relative" }}>
+        <select value={value} onChange={onChange} style={selectStyle}>
+          <option value="">{placeholder}</option>
+          {options.map((opt) => (
+            <option key={opt} value={opt}>
+              {opt}
+            </option>
+          ))}
+        </select>
+        <span aria-hidden="true" style={selectArrowStyle}>
+          ▾
+        </span>
+      </div>
     </div>
   );
 }
@@ -361,4 +423,75 @@ const inputStyle = {
   outline: "none",
   fontSize: 14,
   boxSizing: "border-box",
+};
+
+const comboFieldStyle = {
+  display: "grid",
+  gridTemplateColumns: "1fr 44px",
+  gap: 8,
+};
+
+const comboInputStyle = {
+  ...inputStyle,
+};
+
+const comboButtonStyle = {
+  borderRadius: 10,
+  border: "1px solid #444444ff",
+  background: "#1b1b1b",
+  color: "#f8fafc",
+  boxShadow: "0 0 0 1px rgba(148, 163, 184, 0.12) inset",
+  fontSize: 18,
+  cursor: "pointer",
+};
+
+const comboMenuStyle = {
+  position: "absolute",
+  zIndex: 20,
+  top: "100%",
+  left: 0,
+  right: 0,
+  marginTop: 6,
+  padding: 6,
+  borderRadius: 10,
+  border: "1px solid #444444ff",
+  background: "#111111",
+  maxHeight: 220,
+  overflowY: "auto",
+  boxShadow: "0 14px 28px rgba(0, 0, 0, 0.35)",
+};
+
+const comboOptionStyle = {
+  width: "100%",
+  textAlign: "left",
+  padding: "10px 12px",
+  border: 0,
+  borderRadius: 8,
+  background: "transparent",
+  color: "#f8fafc",
+  cursor: "pointer",
+};
+
+const comboEmptyStyle = {
+  padding: "10px 12px",
+  color: "#94a3b8",
+  fontSize: 13,
+};
+
+const selectStyle = {
+  ...inputStyle,
+  paddingRight: 38,
+  appearance: "none",
+  WebkitAppearance: "none",
+  MozAppearance: "none",
+};
+
+const selectArrowStyle = {
+  position: "absolute",
+  right: 12,
+  top: "50%",
+  transform: "translateY(-50%)",
+  color: "#f8fafc",
+  pointerEvents: "none",
+  fontSize: 16,
 };
