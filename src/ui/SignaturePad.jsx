@@ -56,37 +56,18 @@ export default function SignaturePad({ onChange, apiRef }) {
   };
 
   return (
-    <div style={{ display: "grid", gap: 8 }}>
-      <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-        <button
-          type="button"
-          onClick={clear}
-          style={{
-            padding: "10px 12px",
-            borderRadius: 10,
-            border: "1px solid #2b2b2b",
-            background: "#333333ff",
-            color: "#e5e7eb",
-            cursor: "pointer",
-            fontWeight: 700,
-          }}
-        >
+    <div style={{ display: "grid", gap: 10 }}>
+      <div className="sig-controls">
+        <button type="button" onClick={clear} className="btn btn-ghost">
           Clear
         </button>
-        <span style={{ fontSize: 12, color: "#94a3b8" }}>
-          {hasInk ? "Signature captured" : "Draw your signature below"}
+        <span className="sig-hint">
+          <span className={`sig-dot${hasInk ? " active" : ""}`} />
+          {hasInk ? "Signature captured ✓" : "Draw your signature below"}
         </span>
       </div>
 
-      <div
-        style={{
-          border: "1px solid #ccc",
-          borderRadius: 8,
-          height: 160,
-          overflow: "hidden",
-          background: "#fff",
-        }}
-      >
+      <div className="sig-canvas-wrap">
         <canvas
           ref={canvasRef}
           style={{ width: "100%", height: "100%", display: "block" }}

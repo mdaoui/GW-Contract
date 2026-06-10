@@ -4,6 +4,7 @@ import gwLogoUrl from "./assets/gw-logo.png";
 import gwLogoBlackUrl from "./assets/GW Logo Black version.jpg";
 import { projectBriefPresets, projectBriefRoleOptions } from "./data/projectBriefPresets";
 import { personPresetMap, personPresetOptions } from "./data/personPresets";
+import "./App.css";
 
 export default function App() {
   const [form, setForm] = useState({
@@ -44,9 +45,9 @@ export default function App() {
 
   const update = (key) => (e) =>
     setForm((p) => ({ ...p, [key]: e.target.value }));
+
   const applyFullName = (fullName) => {
     const preset = personPresetMap[fullName];
-
     setForm((p) => ({
       ...p,
       fullName,
@@ -59,6 +60,7 @@ export default function App() {
         : null),
     }));
   };
+
   const onBriefRoleChange = (e) => {
     const role = e.target.value;
     setBriefRole(role);
@@ -67,9 +69,6 @@ export default function App() {
       ...p,
       projectBrief: projectBriefPresets[role] ?? "",
     }));
-  };
-  const onFullNameChange = (e) => {
-    applyFullName(e.target.value);
   };
 
   const downloadBlob = (blob, name) => {
@@ -104,124 +103,90 @@ export default function App() {
   };
 
   return (
-    <div
-      style={{
-        maxWidth: 820,
-        margin: "40px auto",
-        padding: 16,
-        fontFamily: "system-ui, Arial",
-      }}
-    >
-      <header
-        style={{
-          marginBottom: 10,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <img
-          src={gwLogoBlackUrl}
-          alt="GW"
-          style={{ height: 100, width: "auto", objectFit: "contain" }}
-        />
+    <div className="app-shell">
+      {/* ── Header ── */}
+      <header className="app-header">
+        <img src={gwLogoBlackUrl} alt="Galaxy Way" className="app-logo" />
+        <div>
+          <h1 className="app-title">Contract PDF Generator</h1>
+          <p className="app-subtitle">Contract creator made by MD · GW Production Team</p>
+          <div style={{ display: "flex", justifyContent: "center", marginTop: 8 }}>
+            <span className="version-badge">V 1.0</span>
+          </div>
+        </div>
       </header>
-      <div style={{ textAlign: "center", marginBottom: 12 }}>
-        <h1 style={{ marginBottom: 6 }}>Contract PDF Generator V1.0</h1>
-        <p style={{ marginTop: 0, color: "#94a3b8" }}>
-          Contract creator made by (MD for GW Production Team)
-        </p>
-      </div>
 
-      <div style={{ display: "grid", gap: 12 }}>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-          <PresetNameField
-            label="Full Name"
-            value={form.fullName}
-            onChangeValue={applyFullName}
-            options={personPresetOptions}
-            placeholder="Type name or select preset"
-          />
-          <Field label="National ID Card" value={form.idCard} onChange={update("idCard")} />
-          <Field
-            label="Project No."
-            value={form.projectNo}
-            onChange={update("projectNo")}
-          />
-          <Field
-            label="Project Name"
-            value={form.projectName}
-            onChange={update("projectName")}
-          />
-          <Field
-            label="Contract Date (optional)"
-            type="date"
-            value={form.contractDate}
-            onChange={update("contractDate")}
-          />
-          <Field
-            label="Start Date"
-            type="date"
-            value={form.dateStart}
-            onChange={update("dateStart")}
-          />
-          <Field
-            label="End Date"
-            type="date"
-            value={form.dateEnd}
-            onChange={update("dateEnd")}
-          />
-          <Field
-            label="Cost (OMR)"
-            value={form.costOmr}
-            onChange={update("costOmr")}
-            placeholder="e.g. 150"
-          />
-          <SelectField
-            label="Bank Name"
-            value={form.bankName}
-            onChange={update("bankName")}
-            options={[
-              "Bank Muscat",
-              "NBO",
-              "Oman Arab Bank",
-              "Sohar International",
-              "Nizwa Bank",
-              "Dhofar Bank",
-            ]}
-            placeholder="Select bank"
-          />
-          <Field
-            label="Bank Account Number"
-            value={form.bankAccount}
-            onChange={update("bankAccount")}
-            placeholder="e.g. 0311056779010014"
-          />
-        </div>
+      <div className="form-grid">
 
-        <div>
-          <SelectField
-            label="Brief Preset"
-            value={briefRole}
-            onChange={onBriefRoleChange}
-            options={projectBriefRoleOptions}
-            placeholder="Select role preset"
-          />
-          <label style={labelStyle}>Project Brief</label>
-          <textarea
-            value={form.projectBrief}
-            onChange={update("projectBrief")}
-            rows={6}
-            style={inputStyle}
-            placeholder="Write a short brief..."
-          />
-        </div>
-
-        <div>
-          <h3 style={sectionHeadingStyle}>Freelancer / Candidate</h3>
-          <div style={{ marginBottom: 18 }}>
+        {/* ── Section 1: Contractor Info ── */}
+        <div className="section-card">
+          <h2 className="section-heading">Contractor Info</h2>
+          <div className="fields-grid">
             <PresetNameField
-              label="By:"
+              label="Full Name"
+              value={form.fullName}
+              onChangeValue={applyFullName}
+              options={personPresetOptions}
+              placeholder="Type name or select preset"
+            />
+            <Field label="National ID Card" value={form.idCard} onChange={update("idCard")} />
+            <Field label="Bank Account Number" value={form.bankAccount} onChange={update("bankAccount")} placeholder="e.g. 0311056779010014" />
+            <SelectField
+              label="Bank Name"
+              value={form.bankName}
+              onChange={update("bankName")}
+              options={["Bank Muscat","NBO","Oman Arab Bank","Sohar International","Nizwa Bank","Dhofar Bank"]}
+              placeholder="Select bank"
+            />
+          </div>
+        </div>
+
+        {/* ── Section 2: Project Details ── */}
+        <div className="section-card">
+          <h2 className="section-heading">Project Details</h2>
+          <div className="fields-grid">
+            <Field label="Project No." value={form.projectNo} onChange={update("projectNo")} />
+            <Field label="Project Name" value={form.projectName} onChange={update("projectName")} />
+            <Field label="Contract Date (optional)" type="date" value={form.contractDate} onChange={update("contractDate")} />
+            <Field label="Cost (OMR)" value={form.costOmr} onChange={update("costOmr")} placeholder="e.g. 150" />
+            <Field label="Start Date" type="date" value={form.dateStart} onChange={update("dateStart")} />
+            <Field label="End Date" type="date" value={form.dateEnd} onChange={update("dateEnd")} />
+          </div>
+        </div>
+
+        {/* ── Section 3: Project Brief ── */}
+        <div className="section-card">
+          <h2 className="section-heading">Project Brief</h2>
+          <div style={{ marginBottom: 14 }}>
+            <SelectField
+              label="Brief Preset"
+              value={briefRole}
+              onChange={onBriefRoleChange}
+              options={projectBriefRoleOptions}
+              placeholder="Select role preset"
+            />
+          </div>
+          <div className="field-wrap">
+            <label className="field-label">Brief Content</label>
+            <textarea
+              value={form.projectBrief}
+              onChange={update("projectBrief")}
+              rows={6}
+              className="field-textarea"
+              placeholder="Write a short brief..."
+            />
+          </div>
+        </div>
+
+        {/* ── Section 4: Signatures ── */}
+        <div className="section-card">
+          <h2 className="section-heading">Signatures</h2>
+
+          {/* Freelancer */}
+          <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--text-muted)", marginBottom: 10, marginTop: 0 }}>Freelancer / Candidate</p>
+          <div style={{ marginBottom: 20 }}>
+            <PresetNameField
+              label="By"
               value={form.fullName}
               onChangeValue={applyFullName}
               options={personPresetOptions}
@@ -229,91 +194,66 @@ export default function App() {
             />
           </div>
 
-          <h3 style={sectionHeadingStyle}>Employer Signature</h3>
-          <div style={{ marginBottom: 20 }}>
-            <Field
-              label="Signed by"
-              value={form.employerName}
-              onChange={update("employerName")}
-              placeholder="Employer name"
-            />
-            <Field
-              label="Contract creator name"
-              value={form.createdBy}
-              onChange={update("createdBy")}
-              placeholder="Who created this contract"
-              labelStyleOverride={sectionLabelStyle}
-            />
+          <div className="divider" />
+
+          {/* Employer */}
+          <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--text-muted)", marginBottom: 10 }}>Employer</p>
+          <div className="fields-grid" style={{ marginBottom: 20 }}>
+            <Field label="Signed by" value={form.employerName} onChange={update("employerName")} placeholder="Employer name" />
+            <Field label="Contract creator" value={form.createdBy} onChange={update("createdBy")} placeholder="Who created this contract" />
           </div>
 
+          <div className="divider" />
+
+          {/* Signature pad */}
+          <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--text-muted)", marginBottom: 10 }}>Draw Signature</p>
           <SignaturePad apiRef={signatureApiRef} onChange={setSignatureDataUrl} />
           {signatureDataUrl ? (
-            <div style={{ marginTop: 10 }}>
-              <div style={{ fontSize: 12, color: "#94a3b8", marginBottom: 6 }}>
-                Preview (what will be embedded)
-              </div>
-              <img
-                alt="Signature preview"
-                src={signatureDataUrl}
-                style={{
-                  maxWidth: 320,
-                  height: 90,
-                  objectFit: "contain",
-                  border: "1px solid #2b2b2b",
-                  borderRadius: 8,
-                  background: "#fff",
-                  padding: 6,
-                }}
-              />
+            <div className="sig-preview">
+              <p className="sig-preview-label">Signature Preview</p>
+              <img alt="Signature preview" src={signatureDataUrl} className="sig-preview-img" />
             </div>
           ) : null}
         </div>
 
-        <button
-          type="button"
-          onClick={onDownload}
-          disabled={busy}
-          style={{
-            padding: "12px 14px",
-            borderRadius: 10,
-            border: "1px solid #2b2b2b",
-            background: "#333333ff",
-            color: "#e5e7eb",
-            cursor: busy ? "not-allowed" : "pointer",
-            fontWeight: 700,
-          }}
-        >
-          {busy ? "Generating..." : "Download PDF"}
+        {/* ── Download button ── */}
+        <button type="button" onClick={onDownload} disabled={busy} className="btn btn-primary">
+          {busy ? (
+            <>
+              <span className="btn-spinner" />
+              Generating PDF…
+            </>
+          ) : (
+            <>
+              <span style={{ fontSize: 16 }}>⬇</span>
+              Download PDF
+            </>
+          )}
         </button>
+
       </div>
     </div>
   );
 }
 
-function Field({
-  label,
-  type = "text",
-  value,
-  onChange,
-  placeholder,
-  labelStyleOverride,
-  list,
-}) {
+/* ── Field ─────────────────────────────────────────────────────────── */
+function Field({ label, type = "text", value, onChange, placeholder, list }) {
   return (
-    <div>
-      <label style={{ ...labelStyle, ...labelStyleOverride }}>{label}</label>
+    <div className="field-wrap">
+      <label className="field-label">{label}</label>
       <input
         type={type}
         value={value}
         onChange={onChange}
         placeholder={placeholder}
         list={list}
-        style={inputStyle}
+        className="field-input"
       />
     </div>
   );
 }
 
+/* ── PresetNameField ─────────────────────────────────────────────────── */
 function PresetNameField({ label, value, onChangeValue, options, placeholder }) {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -324,32 +264,32 @@ function PresetNameField({ label, value, onChangeValue, options, placeholder }) 
 
   return (
     <div
+      className="combo-wrap field-wrap"
       onBlur={(e) => {
         if (!e.currentTarget.contains(e.relatedTarget)) setIsOpen(false);
       }}
-      style={{ position: "relative" }}
     >
-      <label style={labelStyle}>{label}</label>
-      <div style={comboFieldStyle}>
+      <label className="field-label">{label}</label>
+      <div className="combo-row">
         <input
           type="text"
           value={value}
           onChange={(e) => onChangeValue(e.target.value)}
           placeholder={placeholder}
-          style={comboInputStyle}
+          className="field-input"
         />
         <button
           type="button"
           aria-label={`Show presets for ${label}`}
           aria-expanded={isOpen}
           onClick={() => setIsOpen((open) => !open)}
-          style={comboButtonStyle}
+          className="combo-toggle"
         >
           ▾
         </button>
       </div>
       {isOpen ? (
-        <div style={comboMenuStyle}>
+        <div className="combo-menu">
           {filteredOptions.length ? (
             filteredOptions.map((option) => (
               <button
@@ -359,13 +299,13 @@ function PresetNameField({ label, value, onChangeValue, options, placeholder }) 
                   onChangeValue(option);
                   setIsOpen(false);
                 }}
-                style={comboOptionStyle}
+                className="combo-option"
               >
                 {option}
               </button>
             ))
           ) : (
-            <div style={comboEmptyStyle}>No matching preset</div>
+            <div className="combo-empty">No matching preset</div>
           )}
         </div>
       ) : null}
@@ -373,125 +313,69 @@ function PresetNameField({ label, value, onChangeValue, options, placeholder }) 
   );
 }
 
+/* ── SelectField ────────────────────────────────────────────────────── */
 function SelectField({ label, value, onChange, options, placeholder }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const displayValue = value || placeholder;
+  const isPlaceholder = !value;
+
   return (
-    <div>
-      <label style={labelStyle}>{label}</label>
-      <div style={{ position: "relative" }}>
-        <select value={value} onChange={onChange} style={selectStyle}>
-          <option value="">{placeholder}</option>
-          {options.map((opt) => (
-            <option key={opt} value={opt}>
-              {opt}
-            </option>
-          ))}
-        </select>
-        <span aria-hidden="true" style={selectArrowStyle}>
+    <div
+      className="combo-wrap field-wrap"
+      onBlur={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget)) setIsOpen(false);
+      }}
+    >
+      <label className="field-label">{label}</label>
+      <div className="combo-row">
+        <button
+          type="button"
+          onClick={() => setIsOpen((o) => !o)}
+          aria-expanded={isOpen}
+          className="field-input combo-display-btn"
+          style={{ textAlign: "left", color: isPlaceholder ? "var(--text-muted)" : "var(--text)" }}
+        >
+          {displayValue}
+        </button>
+        <button
+          type="button"
+          aria-label={`Toggle ${label}`}
+          onClick={() => setIsOpen((o) => !o)}
+          className="combo-toggle"
+        >
           ▾
-        </span>
+        </button>
       </div>
+      {isOpen ? (
+        <div className="combo-menu">
+          {placeholder && (
+            <button
+              type="button"
+              onClick={() => {
+                onChange({ target: { value: "" } });
+                setIsOpen(false);
+              }}
+              className="combo-option"
+              style={{ color: "var(--text-muted)" }}
+            >
+              {placeholder}
+            </button>
+          )}
+          {options.map((opt) => (
+            <button
+              key={opt}
+              type="button"
+              onClick={() => {
+                onChange({ target: { value: opt } });
+                setIsOpen(false);
+              }}
+              className={`combo-option${value === opt ? " combo-option--active" : ""}`}
+            >
+              {opt}
+            </button>
+          ))}
+        </div>
+      ) : null}
     </div>
   );
 }
-
-const sectionHeadingStyle = {
-  marginBottom: 8,
-};
-
-const labelStyle = {
-  display: "block",
-  fontSize: 12,
-  color: "#94a3b8",
-  marginBottom: 6,
-};
-
-const sectionLabelStyle = {
-  fontSize: "1.17em",
-  fontWeight: "bold",
-  color: "inherit",
-  marginBottom: 8,
-};
-
-const inputStyle = {
-  width: "100%",
-  padding: "10px 10px",
-  borderRadius: 10,
-  border: "1px solid #444444ff",
-  background: "#0d0d0dff",
-  color: "#f8fafc",
-  boxShadow: "0 0 0 1px rgba(148, 163, 184, 0.12) inset",
-  outline: "none",
-  fontSize: 14,
-  boxSizing: "border-box",
-};
-
-const comboFieldStyle = {
-  display: "grid",
-  gridTemplateColumns: "1fr 44px",
-  gap: 8,
-};
-
-const comboInputStyle = {
-  ...inputStyle,
-};
-
-const comboButtonStyle = {
-  borderRadius: 10,
-  border: "1px solid #444444ff",
-  background: "#1b1b1b",
-  color: "#f8fafc",
-  boxShadow: "0 0 0 1px rgba(148, 163, 184, 0.12) inset",
-  fontSize: 18,
-  cursor: "pointer",
-};
-
-const comboMenuStyle = {
-  position: "absolute",
-  zIndex: 20,
-  top: "100%",
-  left: 0,
-  right: 0,
-  marginTop: 6,
-  padding: 6,
-  borderRadius: 10,
-  border: "1px solid #444444ff",
-  background: "#111111",
-  maxHeight: 220,
-  overflowY: "auto",
-  boxShadow: "0 14px 28px rgba(0, 0, 0, 0.35)",
-};
-
-const comboOptionStyle = {
-  width: "100%",
-  textAlign: "left",
-  padding: "10px 12px",
-  border: 0,
-  borderRadius: 8,
-  background: "transparent",
-  color: "#f8fafc",
-  cursor: "pointer",
-};
-
-const comboEmptyStyle = {
-  padding: "10px 12px",
-  color: "#94a3b8",
-  fontSize: 13,
-};
-
-const selectStyle = {
-  ...inputStyle,
-  paddingRight: 38,
-  appearance: "none",
-  WebkitAppearance: "none",
-  MozAppearance: "none",
-};
-
-const selectArrowStyle = {
-  position: "absolute",
-  right: 12,
-  top: "50%",
-  transform: "translateY(-50%)",
-  color: "#f8fafc",
-  pointerEvents: "none",
-  fontSize: 16,
-};
